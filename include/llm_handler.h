@@ -25,12 +25,13 @@
 
 // LLM統合タイプ
 enum LLMType {
-    LLM_NONE,           // LLM無効
-    LLM_CLOUD_OPENAI,   // OpenAI API
-    LLM_CLOUD_CLAUDE,   // Anthropic Claude
-    LLM_CLOUD_GEMINI,   // Google Gemini
-    LLM_LOCAL_SERVER,   // ローカルサーバー (Ollama等)
-    LLM_MICRO_LOCAL     // ESP32上の超軽量モデル(実験的)
+    LLM_NONE,            // LLM無効
+    LLM_CLOUD_OPENAI,    // OpenAI API
+    LLM_CLOUD_CLAUDE,    // Anthropic Claude
+    LLM_CLOUD_GEMINI,    // Google Gemini
+    LLM_LOCAL_SERVER,    // ローカルサーバー (Ollama等)
+    LLM_TINY_LOCAL,      // ESP32上の超軽量モデル(TinyLLM)
+    LLM_RULE_BASED       // ルールベース応答(高速・軽量)
 };
 
 class LLMHandler {
