@@ -2,25 +2,11 @@
 #include <lvgl.h>
 #include <SPI.h>
 #include <Wire.h>
-#include "Audio.h"
+#include "display_driver.h"
+#include "touch_driver.h"
+#include "llm_handler.h"
 
-// ===== ハードウェアピン定義 (Waveshare ESP32-S3-Touch-LCD-1.85) =====
-// LCD (QSPI接続)
-#define LCD_CS    10
-#define LCD_DC    11
-#define LCD_RST   12
-#define LCD_BL    45
-#define LCD_MOSI  13
-#define LCD_MISO  -1
-#define LCD_SCLK  14
-
-// Touch (I2C)
-#define TOUCH_SDA  4
-#define TOUCH_SCL  5
-#define TOUCH_INT  7
-#define TOUCH_RST  8
-
-// Audio
+// Audio (will be implemented with ESP32-audioI2S)
 #define I2S_BCLK   15
 #define I2S_LRCK   16
 #define I2S_DOUT   17
