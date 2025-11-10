@@ -2,6 +2,7 @@
 #include <lvgl.h>
 #include <SPI.h>
 #include <Wire.h>
+#include "config.h"
 #include "display_driver.h"
 #include "touch_driver.h"
 #include "llm_handler.h"
