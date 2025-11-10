@@ -26,7 +26,13 @@
 // ===== LVGL用バッファ =====
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf1[SCREEN_WIDTH * 60];
+static lv_color_t buf2[SCREEN_WIDTH * 60];
 static lv_disp_drv_t disp_drv;
+
+// ===== ハードウェアドライバ =====
+DisplayDriver* display;
+TouchDriver* touch;
+LLMHandler* llm;
 
 // ===== カービィキャラクター =====
 lv_obj_t *face_circle;
@@ -47,32 +53,42 @@ AnimState current_anim = ANIM_IDLE;
 uint32_t last_anim_time = 0;
 uint32_t blink_timer = 0;
 
-// オーディオ
-Audio audio;
-
-// ===== LCD描画関数 (LVGL用) =====
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
-    uint32_t w = (area->x2 - area->x1 + 1);
-    uint32_t h = (area->y2 - area->y1 + 1);
-    
-    // SPIでLCDにデータを送信 (実際のドライバICに合わせて実装が必要)
-    // ここではプレースホルダー
-    
-    lv_disp_flush_ready(disp);
+// ===== LVGL入力デバイスコールバック =====
+void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
+    if (touch->read() && touch->isTouched()) {
+        data->state = LV_INDEV_STATE_PR;
+        data->point.x = touch->getX();
+        data->point.y = touch->getY();
+    } else {
+        data->state = LV_INDEV_STATE_REL;
+    }
 }
 
 // ===== LVGLの初期化 =====
 void lvgl_init() {
+    Serial.println("LVGL初期化中...");
+    
     lv_init();
     
-    lv_disp_draw_buf_init(&draw_buf, buf1, NULL, SCREEN_WIDTH * 60);
+    // ディスプレイバッファ設定（ダブルバッファ）
+    lv_disp_draw_buf_init(&draw_buf, buf1, buf2, SCREEN_WIDTH * 60);
     
+    // ディスプレイドライバ登録
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = SCREEN_WIDTH;
     disp_drv.ver_res = SCREEN_HEIGHT;
-    disp_drv.flush_cb = my_disp_flush;
+    disp_drv.flush_cb = DisplayDriver::lvgl_flush_cb;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
+    
+    // タッチ入力ドライバ登録
+    static lv_indev_drv_t indev_drv;
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_POINTER;
+    indev_drv.read_cb = my_touchpad_read;
+    lv_indev_drv_register(&indev_drv);
+    
+    Serial.println("LVGL初期化完了!");
 }
 
 // ===== カービィ風キャラクターの作成 =====
