@@ -283,17 +283,27 @@ void chat_with_llm(const String& message) {
 // ===== セットアップ =====
 void setup() {
     Serial.begin(115200);
-    Serial.println("ESP32-S3-Touch-LCD-1.85 カービィ風キャラクター起動中...");
+    delay(1000);
+    Serial.println("\n\n=================================");
+    Serial.println("ESP32-S3-Touch-LCD-1.85");
+    Serial.println("カービィ風キャラクター with LLM");
+    Serial.println("=================================\n");
     
-    // LCD背面照明
-    pinMode(LCD_BL, OUTPUT);
-    digitalWrite(LCD_BL, HIGH);
+    // ディスプレイ初期化
+    display = new DisplayDriver();
+    if (!display->init()) {
+        Serial.println("ディスプレイ初期化失敗!");
+        while (1) delay(100);
+    }
     
-    // SPI初期化
-    SPI.begin(LCD_SCLK, LCD_MISO, LCD_MOSI);
-    
-    // I2C初期化 (タッチとセンサー用)
-    Wire.begin(TOUCH_SDA, TOUCH_SCL);
+    // タッチスクリーン初期化
+    touch = new TouchDriver();
+    if (!touch->init()) {
+        Serial.println("タッチスクリーン初期化失敗!");
+        // タッチなしでも続行可能
+    } else {
+        touch->setTouchCallback(on_touch);
+    }
     
     // LVGL初期化
     lvgl_init();
@@ -301,18 +311,40 @@ void setup() {
     // キャラクター作成
     create_kirby_character();
     
-    // オーディオ初期化
-    audio_init();
+    // LLM初期化（オプション）
+    llm = new LLMHandler();
+    llm->setupKirbyPersonality();
+    
+    // WiFi接続（オプション - LLM使用時）
+    #ifdef USE_LLM
+    if (llm->connectWiFi(LLMConfig::WIFI_CREDS.ssid, LLMConfig::WIFI_CREDS.password)) {
+        // LLM設定
+        llm->setLLMType(LLM_MICRO_LOCAL);  // デフォルトは軽量ルールベース
+        // クラウドLLMを使う場合:
+        // llm->setLLMType(LLM_CLOUD_OPENAI);
+        // llm->setAPIKey(LLMConfig::OPENAI_API_KEY);
+        // llm->setEndpoint(LLMConfig::OPENAI_ENDPOINT);
+        // llm->setModelName(LLMConfig::OPENAI_MODEL);
+        Serial.println("LLM準備完了!");
+    }
+    #endif
     
     // まばたきタイマー初期化
     blink_timer = millis() + random(2000, 5000);
     
-    Serial.println("初期化完了!");
+    Serial.println("\n✨ 初期化完了! ✨");
+    Serial.println("\nシリアルコマンド:");
+    Serial.println("  b - まばたき");
+    Serial.println("  t - 話す");
+    Serial.println("  s - 驚き");
+    Serial.println("  r - リセット");
+    Serial.println("  h - こんにちは");
+    Serial.println("  ? - ヘルプ\n");
 }
 
 // ===== メインループ =====
 void loop() {
-    // LVGL更新
+    // LVGL更新（UIとタッチ処理）
     lv_timer_handler();
     
     // アニメーション更新
@@ -320,21 +352,68 @@ void loop() {
     
     // シリアルコマンドでテスト
     if (Serial.available()) {
-        char cmd = Serial.read();
+        String input = Serial.readStringUntil('\n');
+        input.trim();
+        
+        if (input.length() == 0) return;
+        
+        char cmd = input.charAt(0);
+        
         switch (cmd) {
             case 'b': // まばたき
+                Serial.println("👁️ まばたき!");
                 blink_animation();
                 break;
+                
             case 't': // 話す
-                speak_cute();
+                speak_cute("テストだよ!");
                 break;
+                
             case 's': // 驚き
+                Serial.println("😲 びっくり!");
                 surprise_animation();
                 current_anim = ANIM_SURPRISE;
                 last_anim_time = millis();
                 break;
+                
             case 'r': // リセット
+                Serial.println("🔄 リセット");
                 reset_to_idle();
+                break;
+                
+            case 'h': // こんにちは
+                if (llm) {
+                    chat_with_llm("こんにちは!");
+                } else {
+                    speak_cute("やっほー!");
+                }
+                break;
+                
+            case '?': // ヘルプ
+                Serial.println("\n📖 コマンド一覧:");
+                Serial.println("  b - まばたき");
+                Serial.println("  t - 話す");
+                Serial.println("  s - 驚き");
+                Serial.println("  r - リセット");
+                Serial.println("  h - こんにちは");
+                Serial.println("  l <message> - LLMと会話");
+                Serial.println("  ? - このヘルプ\n");
+                break;
+                
+            case 'l': // LLMと会話
+                if (input.length() > 2) {
+                    String message = input.substring(2);
+                    chat_with_llm(message);
+                } else {
+                    Serial.println("使い方: l <メッセージ>");
+                }
+                break;
+                
+            default:
+                // その他の入力はLLMへ
+                if (llm && input.length() > 0) {
+                    chat_with_llm(input);
+                }
                 break;
         }
     }
