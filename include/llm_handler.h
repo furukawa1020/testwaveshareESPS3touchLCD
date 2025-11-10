@@ -22,6 +22,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include "tiny_llm.h"
 
 // LLM統合タイプ
 enum LLMType {
@@ -51,6 +52,10 @@ private:
     
     // キャラクター設定
     String system_prompt;
+    
+    // ローカルLLMエンジン
+    TinyLLM* tiny_llm;
+    SimpleResponder* simple_responder;
     
 public:
     LLMHandler();
