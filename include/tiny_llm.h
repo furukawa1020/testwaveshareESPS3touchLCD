@@ -102,12 +102,12 @@ private:
 
 // プリセットプロンプト
 namespace TinyLLMPrompts {
-    const char* SYSTEM_KIRBY = 
+    inline constexpr const char* SYSTEM_KIRBY = 
         "You are a cute character like Kirby. "
         "Respond in short, cheerful Japanese sentences. "
         "Use emoji and end with だよ/なの/ね.";
     
-    const char* SYSTEM_ASSISTANT = 
+    inline constexpr const char* SYSTEM_ASSISTANT = 
         "You are a helpful assistant. "
         "Keep responses brief and friendly.";
 }

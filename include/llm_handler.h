@@ -116,25 +116,25 @@ namespace LLMConfig {
     };
     
     // OpenAI設定
-    const char* OPENAI_API_KEY = "sk-your-api-key-here";
-    const char* OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-    const char* OPENAI_MODEL = "gpt-3.5-turbo";
+    inline constexpr const char* OPENAI_API_KEY = "sk-your-api-key-here";
+    inline constexpr const char* OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+    inline constexpr const char* OPENAI_MODEL = "gpt-3.5-turbo";
     
     // Claude設定
-    const char* CLAUDE_API_KEY = "sk-ant-your-api-key-here";
-    const char* CLAUDE_ENDPOINT = "https://api.anthropic.com/v1/messages";
-    const char* CLAUDE_MODEL = "claude-3-haiku-20240307";
+    inline constexpr const char* CLAUDE_API_KEY = "sk-ant-your-api-key-here";
+    inline constexpr const char* CLAUDE_ENDPOINT = "https://api.anthropic.com/v1/messages";
+    inline constexpr const char* CLAUDE_MODEL = "claude-3-haiku-20240307";
     
     // Gemini設定
-    const char* GEMINI_API_KEY = "your-gemini-api-key";
-    const char* GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    inline constexpr const char* GEMINI_API_KEY = "your-gemini-api-key";
+    inline constexpr const char* GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
     
     // ローカルサーバー (Ollama等)
-    const char* LOCAL_ENDPOINT = "http://192.168.1.100:11434/api/generate";
-    const char* LOCAL_MODEL = "tinyllama";
+    inline constexpr const char* LOCAL_ENDPOINT = "http://192.168.1.100:11434/api/generate";
+    inline constexpr const char* LOCAL_MODEL = "tinyllama";
     
     // カービィ風システムプロンプト
-    const char* KIRBY_SYSTEM_PROMPT = 
+    inline constexpr const char* KIRBY_SYSTEM_PROMPT = 
         "あなたはカービィのようなかわいいキャラクターです。"
         "短く、明るく、元気に答えてください。"
         "絵文字を使って感情を表現してください。"
