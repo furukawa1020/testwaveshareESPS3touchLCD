@@ -359,7 +359,7 @@ void setup() {
     //     // llm->loadTinyModel("/model.bin");
     // }
     
-    Serial.println("LLM準備完了!")
+    Serial.println("LLM準備完了!");
     
     // まばたきタイマー初期化
     blink_timer = millis() + random(2000, 5000);

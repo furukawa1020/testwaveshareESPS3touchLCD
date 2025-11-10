@@ -76,7 +76,7 @@ void LLMHandler::setupKirbyPersonality() {
 void LLMHandler::setupCuteAssistant() {
     system_prompt = 
         "あなたはとってもかわいいAIアシスタントです。"
-        "短く、楽しく、親しみやすい口調で答えてください。"
+        "短く、楽しく、親しみやすい口調で答えてください。";
 }
 
 bool LLMHandler::initTinyLLM() {

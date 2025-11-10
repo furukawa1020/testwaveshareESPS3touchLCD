@@ -104,7 +104,8 @@ void TinyLLM::freeMemory() {
 }
 
 bool TinyLLM::loadModelFromSD(const char* path) {
-    if (!SD.begin(TF_CS)) {
+    // SDカードのCSピンは使用しない（このハードウェアではSPIフラッシュを使用）
+    if (!SD.begin()) {
         Serial.println("SDカード初期化失敗");
         return false;
     }
