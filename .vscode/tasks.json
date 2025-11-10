@@ -1,0 +1,35 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "PlatformIO: Build",
+			"type": "shell",
+			"command": "${userHome}/.platformio/penv/Scripts/platformio.exe",
+			"args": [
+				"run",
+				"-e",
+				"esp32s3_lcd"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "PlatformIO: Upload",
+			"type": "shell",
+			"command": "${userHome}/.platformio/penv/Scripts/platformio.exe",
+			"args": [
+				"run",
+				"-e",
+				"esp32s3_lcd",
+				"-t",
+				"upload"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		}
+	]
+}
