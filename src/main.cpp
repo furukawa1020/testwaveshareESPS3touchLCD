@@ -236,21 +236,48 @@ void update_animation() {
     }
 }
 
-// ===== オーディオ初期化 =====
-void audio_init() {
-    // I2S設定 (PCM5101A用)
-    audio.setPinout(I2S_BCLK, I2S_LRCK, I2S_DOUT);
-    audio.setVolume(15); // 0-21
-}
-
-// ===== かわいい声でしゃべる (TTS風の効果音) =====
-void speak_cute() {
+// ===== かわいい声でしゃべる =====
+void speak_cute(const String& message) {
     current_anim = ANIM_TALK;
     last_anim_time = millis();
     
-    // ここでは簡単なビープ音を生成
-    // 実際のTTSまたは録音済み音声ファイルを使用することを推奨
-    Serial.println("かわいい声でしゃべります♪");
+    Serial.print("🎀 しゃべります: ");
+    Serial.println(message);
+    
+    // TODO: 実際のオーディオ出力を実装
+    // audio.connecttoFS(SD, "/cute_voice.mp3");
+}
+
+// ===== タッチイベントハンドラ =====
+void on_touch(TouchPoint point) {
+    Serial.printf("タッチ: x=%d, y=%d, gesture=%d\n", point.x, point.y, point.gesture);
+    
+    // ジェスチャーに応じたアクション
+    switch (point.gesture) {
+        case GESTURE_SINGLE_CLICK:
+            blink_animation();
+            break;
+        case GESTURE_DOUBLE_CLICK:
+            surprise_animation();
+            current_anim = ANIM_SURPRISE;
+            last_anim_time = millis();
+            break;
+        case GESTURE_LONG_PRESS:
+            speak_cute("長押しされたよ!");
+            break;
+    }
+}
+
+// ===== LLMとの会話 =====
+void chat_with_llm(const String& message) {
+    if (!llm || !llm->isConnected()) {
+        Serial.println("LLMが使用できません");
+        return;
+    }
+    
+    speak_cute("考え中...");
+    String response = llm->chat(message);
+    speak_cute(response);
 }
 
 // ===== セットアップ =====
