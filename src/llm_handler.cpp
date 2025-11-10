@@ -4,11 +4,19 @@ LLMHandler::LLMHandler() {
     llm_type = LLM_NONE;
     history_count = 0;
     system_prompt = LLMConfig::KIRBY_SYSTEM_PROMPT;
+    tiny_llm = nullptr;
+    simple_responder = nullptr;
 }
 
 LLMHandler::~LLMHandler() {
     if (http_client.connected()) {
         http_client.end();
+    }
+    if (tiny_llm) {
+        delete tiny_llm;
+    }
+    if (simple_responder) {
+        delete simple_responder;
     }
 }
 
@@ -68,7 +76,49 @@ void LLMHandler::setupKirbyPersonality() {
 void LLMHandler::setupCuteAssistant() {
     system_prompt = 
         "あなたはとってもかわいいAIアシスタントです。"
-        "短く、楽しく、親しみやすい口調で答えてください。";
+        "短く、楽しく、親しみやすい口調で答えてください。"
+}
+
+bool LLMHandler::initTinyLLM() {
+    Serial.println("TinyLLM初期化中...");
+    
+    if (tiny_llm) {
+        delete tiny_llm;
+    }
+    
+    tiny_llm = new TinyLLM();
+    if (!tiny_llm->init()) {
+        Serial.println("TinyLLM初期化失敗");
+        delete tiny_llm;
+        tiny_llm = nullptr;
+        return false;
+    }
+    
+    Serial.println("TinyLLM初期化完了!");
+    return true;
+}
+
+bool LLMHandler::initSimpleResponder() {
+    Serial.println("SimpleResponder初期化中...");
+    
+    if (simple_responder) {
+        delete simple_responder;
+    }
+    
+    simple_responder = new SimpleResponder();
+    simple_responder->init();
+    
+    Serial.println("SimpleResponder初期化完了!");
+    return true;
+}
+
+bool LLMHandler::loadTinyModel(const char* path) {
+    if (!tiny_llm) {
+        Serial.println("TinyLLMが初期化されていません");
+        return false;
+    }
+    
+    return tiny_llm->loadModelFromSD(path);
 }
 
 String LLMHandler::chat(const String& user_message) {
