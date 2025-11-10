@@ -76,6 +76,11 @@ public:
     String chat(const String& user_message);
     void clearHistory();
     
+    // ローカルLLM管理
+    bool initTinyLLM();
+    bool initSimpleResponder();
+    bool loadTinyModel(const char* path);
+    
     // プリセットプロンプト
     void setupKirbyPersonality();
     void setupCuteAssistant();
@@ -83,7 +88,8 @@ public:
 private:
     String sendCloudRequest(const String& message);
     String sendLocalRequest(const String& message);
-    String processMicroLocal(const String& message);
+    String processTinyLocal(const String& message);
+    String processRuleBased(const String& message);
     
     void addToHistory(const String& user_msg, const String& assistant_msg);
     String buildPrompt(const String& current_message);
