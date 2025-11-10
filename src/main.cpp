@@ -271,13 +271,20 @@ void on_touch(TouchPoint point) {
 
 // ===== LLMとの会話 =====
 void chat_with_llm(const String& message) {
-    if (!llm || !llm->isConnected()) {
-        Serial.println("LLMが使用できません");
+    if (!llm) {
+        Serial.println("LLMが初期化されていません");
+        speak_cute("ごめんね、今は話せないの...");
         return;
     }
     
-    speak_cute("考え中...");
+    // 考え中アニメーション
+    current_anim = ANIM_TALK;
+    last_anim_time = millis();
+    
+    // LLMで応答生成
     String response = llm->chat(message);
+    
+    // 応答をしゃべる
     speak_cute(response);
 }
 
@@ -312,23 +319,47 @@ void setup() {
     // キャラクター作成
     create_kirby_character();
     
-    // LLM初期化（オプション）
+    // LLM初期化
     llm = new LLMHandler();
     llm->setupKirbyPersonality();
     
-    // WiFi接続（オプション - LLM使用時）
     #ifdef USE_LLM
-    if (llm->connectWiFi(LLMConfig::WIFI_CREDS.ssid, LLMConfig::WIFI_CREDS.password)) {
-        // LLM設定
-        llm->setLLMType(LLM_MICRO_LOCAL);  // デフォルトは軽量ルールベース
+    // WiFi接続（クラウドLLM使用時）
+    bool wifi_connected = llm->connectWiFi(WIFI_SSID, WIFI_PASSWORD);
+    
+    if (wifi_connected) {
+        Serial.println("WiFi接続成功! クラウドLLMが利用可能です");
+        // デフォルトはルールベース（高速）
+        llm->setLLMType(LLM_RULE_BASED);
+        
         // クラウドLLMを使う場合:
         // llm->setLLMType(LLM_CLOUD_OPENAI);
-        // llm->setAPIKey(LLMConfig::OPENAI_API_KEY);
+        // llm->setAPIKey(OPENAI_API_KEY);
         // llm->setEndpoint(LLMConfig::OPENAI_ENDPOINT);
-        // llm->setModelName(LLMConfig::OPENAI_MODEL);
-        Serial.println("LLM準備完了!");
+        // llm->setModelName(OPENAI_MODEL);
+    } else {
+        Serial.println("WiFi未接続 - ルールベースLLMを使用");
+        llm->setLLMType(LLM_RULE_BASED);
     }
+    #else
+    // WiFi不要のルールベースLLM
+    Serial.println("ローカルルールベースLLMを初期化");
+    llm->setLLMType(LLM_RULE_BASED);
     #endif
+    
+    // ルールベース応答エンジンを初期化
+    if (!llm->initSimpleResponder()) {
+        Serial.println("SimpleResponder初期化失敗");
+    }
+    
+    // TinyLLMを使う場合（実験的）
+    // if (llm->initTinyLLM()) {
+    //     llm->setLLMType(LLM_TINY_LOCAL);
+    //     // SDカードからモデルを読み込む
+    //     // llm->loadTinyModel("/model.bin");
+    // }
+    
+    Serial.println("LLM準備完了!")
     
     // まばたきタイマー初期化
     blink_timer = millis() + random(2000, 5000);
@@ -383,11 +414,7 @@ void loop() {
                 break;
                 
             case 'h': // こんにちは
-                if (llm) {
-                    chat_with_llm("こんにちは!");
-                } else {
-                    speak_cute("やっほー!");
-                }
+                chat_with_llm("こんにちは!");
                 break;
                 
             case '?': // ヘルプ

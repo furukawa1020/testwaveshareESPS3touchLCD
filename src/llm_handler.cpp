@@ -126,13 +126,17 @@ String LLMHandler::chat(const String& user_message) {
         return "LLMが設定されていません";
     }
     
-    if (!isConnected() && llm_type != LLM_MICRO_LOCAL) {
+    // ローカルモード以外はWiFi必要
+    if (!isConnected() && 
+        llm_type != LLM_TINY_LOCAL && 
+        llm_type != LLM_RULE_BASED) {
         return "WiFiに接続されていません";
     }
     
     Serial.print("ユーザー: ");
     Serial.println(user_message);
     
+    uint32_t start_time = millis();
     String response;
     
     switch (llm_type) {
@@ -146,8 +150,12 @@ String LLMHandler::chat(const String& user_message) {
             response = sendLocalRequest(user_message);
             break;
             
-        case LLM_MICRO_LOCAL:
-            response = processMicroLocal(user_message);
+        case LLM_TINY_LOCAL:
+            response = processTinyLocal(user_message);
+            break;
+            
+        case LLM_RULE_BASED:
+            response = processRuleBased(user_message);
             break;
             
         default:
@@ -155,12 +163,15 @@ String LLMHandler::chat(const String& user_message) {
             break;
     }
     
+    uint32_t elapsed = millis() - start_time;
+    
     if (response.length() > 0) {
         addToHistory(user_message, response);
     }
     
     Serial.print("アシスタント: ");
     Serial.println(response);
+    Serial.printf("応答時間: %dms\n", elapsed);
     
     return response;
 }
@@ -314,32 +325,37 @@ String LLMHandler::sendLocalRequest(const String& message) {
     return response;
 }
 
-String LLMHandler::processMicroLocal(const String& message) {
-    // 超軽量なルールベースの応答
-    // ESP32-S3のメモリ制約のため、完全なLLMは不可能
-    
-    String msg_lower = message;
-    msg_lower.toLowerCase();
-    
-    if (msg_lower.indexOf("こんにちは") >= 0 || msg_lower.indexOf("hello") >= 0) {
-        return "やっほー! 元気だよ! 🎀";
-    } else if (msg_lower.indexOf("元気") >= 0) {
-        return "うん! とっても元気だよ! ✨";
-    } else if (msg_lower.indexOf("ありがとう") >= 0) {
-        return "どういたしまして! 💕";
-    } else if (msg_lower.indexOf("かわいい") >= 0) {
-        return "えへへ、ありがとう! (*´▽`*) 💗";
-    } else if (msg_lower.indexOf("名前") >= 0) {
-        return "ぼくの名前はカビちゃんだよ! 🌸";
-    } else if (msg_lower.indexOf("好き") >= 0) {
-        return "わーい! ぼくも大好きだよ! 💖";
-    } else if (msg_lower.indexOf("遊") >= 0) {
-        return "遊ぼう遊ぼう! 何して遊ぶ? 🎮";
-    } else if (msg_lower.indexOf("さようなら") >= 0 || msg_lower.indexOf("bye") >= 0) {
-        return "またね! バイバイ! 👋✨";
-    } else {
-        return "ふむふむ、なるほどね! 😊";
+String LLMHandler::processTinyLocal(const String& message) {
+    if (!tiny_llm) {
+        Serial.println("TinyLLMが初期化されていません");
+        return "ごめんね、今は考えられないの... 😢";
     }
+    
+    if (!tiny_llm->isModelLoaded()) {
+        Serial.println("モデルが読み込まれていません");
+        return "モデルを読み込んでないの... ごめんね! 💦";
+    }
+    
+    // 会話履歴を含めたコンテキスト構築
+    String context = buildPrompt(message);
+    
+    // TinyLLMで推論
+    String response = tiny_llm->chat(message, context);
+    
+    // 空の場合はフォールバック
+    if (response.length() == 0) {
+        return "うーん、なんて言えばいいかな... 🤔";
+    }
+    
+    return response;
+}
+
+String LLMHandler::processRuleBased(const String& message) {
+    if (!simple_responder) {
+        initSimpleResponder();
+    }
+    
+    return simple_responder->respond(message);
 }
 
 String LLMHandler::parseOpenAIResponse(const String& response) {
